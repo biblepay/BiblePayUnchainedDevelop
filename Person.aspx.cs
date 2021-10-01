@@ -86,7 +86,7 @@ namespace Unchained
             // By default, DACResult returns true if there is no error:
             r.TXID = "";
             r.Event = "AddFriendRequest";
-            r.Result = "Add Friend";
+            r.Result = "Friend Request";
             return r;
         }
         protected override void Event(BBPEvent e)
@@ -259,14 +259,16 @@ namespace Unchained
             string sFirstName = Request.QueryString["firstname"].ToNonNullString();
             string sLastName = Request.QueryString["lastname"].ToNonNullString();
             bool fHomogenized = Request.QueryString["homogenized"].ToNonNullString() == "1";
+            string sUserID = Request.QueryString["id"].ToNonNullString();
 
-            if (sFirstName == "")
+            if (sUserID == "")
             {
                 sFirstName = gUser(this).FirstName;
                 sLastName = gUser(this).LastName;
+                sUserID = gUser(this).id;
             }
             // For each timeline entry, pull in attachments (mp4, mp3, video, pdf) - Sort timeline desc:
-            User u = gUser(this, sFirstName, sLastName);
+            User u = gUserById(this, sUserID);
             bool fMe = (u.id == gUser(this).id);
             string html = "<div id='user" + u.id + "'>";
 
@@ -293,7 +295,7 @@ namespace Unchained
             }
 
             string sUserAvatar = "<img src='" + u.AvatarURL + "' class='person' />";
-            string sUserAnchor = UICommon.GetStandardAnchor("ancUser", "EditUserProfile", "", sUserAvatar, "Edit your User Profile Fields");
+            string sUserAnchor = UICommon.GetStandardAnchor("ancUser", "EditUserProfile", "", sUserAvatar, "Edit my User Profile Fields");
             if (!fMe)
                 sUserAnchor = sUserAvatar;
 
@@ -304,15 +306,22 @@ namespace Unchained
             
             html += "<tr><td>" + u.TelegramLinkDescription;
             // Their video channel:
-            string sVideoAnchor = "<a href=VideoList?lastname=" + u.LastName + "&firstname=" + u.FirstName + ">My Video Channel</a>";
+            string sVURL = "VideoList?userid=" + u.id;
+            string sVideoAnchor = "<a href='" + sVURL + "'>My Video Channel</a>";
+            string sModifyProfile = UICommon.GetStandardButton("btnModifyProfile", "Modify my Profile", "EditUserProfile", "Modify my Profile");
 
             html += "<tr><td>" + sVideoAnchor;
+
+            if (gUser(this).id == u.id)
+            {
+                html += "<td>" + sModifyProfile;
+            }
 
             if (gUser(this).LoggedIn)
             {
                 html += "<td>" + sAddFriendButton;
             }
-                
+            
             html += "</tr>";
             html += "</table>";
             html +=  "<br><br>";
